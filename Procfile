@@ -1,1 +1,1 @@
-worker: node example.js
+worker: node WaBot.js
