@@ -169,7 +169,7 @@ async function check_birthday() {
 
     while (true) {
         var todayHour = getIsraelTime().getHours();
-
+    /*
         if (todayHour == checkBirthdayHourHebrew) {
             console.log(`--------\nTime: ${todayHour}, --> Start to check Jewish birthdays...`)
             client.sendMessage(`${groupID_debug}@g.us`, `השעה: ${todayHour}, --> זמן לבדוק ימי הולדת עבריים...`);
@@ -182,7 +182,10 @@ async function check_birthday() {
             console.log(`--------\nTime: ${todayHour}`)
             client.sendMessage(`${groupID_debug}@g.us`, `השעה: ${todayHour}, אני חי! :)`);
         }
-
+*/
+        console.log(`--------\nTime: ${todayHour}`)
+        client.sendMessage(`${groupID_debug}@g.us`, `השעה: ${todayHour}, הבוט של אורקל חי! :)`);
+        
         if (!checkBirthday_Active){
             break;
         }
