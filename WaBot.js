@@ -133,9 +133,9 @@ function birthday_massege() {
                 datePrefer = element.c[2].v;
                 birthdayLoazi = element.c[3].f;
                 try {
-                    day_he = element.c[4].v;
+                    day_he = element.c[4].v.trim();
                     month_he = element.c[5].v;
-                    year_he = element.c[6].v;
+                    year_he = element.c[6].v.trim();
                 } catch (error) {
                     if (datePrefer == "עברי") { client.sendMessage(`${groupID_debug}@g.us`, `ל${personName} יש בעיה בתאריך העברי (חוגג יומולדת עברי)`);}
                     day_he = ""
