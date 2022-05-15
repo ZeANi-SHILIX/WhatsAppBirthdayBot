@@ -4,22 +4,20 @@ const fetch = require("node-fetch-commonjs");
 const Hebcal = require('hebcal');
 const fs = require('fs');
 
-var BOT_ADMINS = ['972507923132@c.us', '972504083675@c.us']; // TODO: commant for adding more
+var BOT_ADMINS = []; // TODO: commant for adding more
 var birthdayProcesses = {};
 var birthdayList = {};
 var ADD_HOUR_TO_UTC = 3;
 
-// start process when the bot start
-birthdayProcesses['1baIl7jbt6seVYrSyJYkVTiL_u8EOOxqDWcCQmAuUpO4'] = {
-    "name": "idf_mil",
-    "GroupType": "idf",
-    "group": "972526515354-1631541593@g.us",
-    "userDebug": "120363041776751646@g.us",
+/* start process when the bot start
+birthdayProcesses['ssid'] = {
+    "name": "{name}",
+    "GroupType": "{type",
+    "group": "{XXXXXXX@g.us}",
+    "userDebug": "XXXXXXXXXX@c.us",
     'checkBirthdayHour': 10
-}
+} */
 
-write_AdminsFile(BOT_ADMINS);
-write_BirthdayProcesses(birthdayProcesses);
 BOT_ADMINS = read_AdminsFile();
 birthdayProcesses = read_BirthdayProcesses();
 
