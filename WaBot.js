@@ -1,22 +1,16 @@
-/* TODO:
-- testing 
-- clean up the code
-
-*/
-
-const groupID_debug = '120363041776751646'; // only for testing, should be removed
 const BOT_ADMINS = ['972507923132@c.us', '972504083675@c.us']; // TODO: commant for adding more
 
 var birthdayProcesses = {};
 var birthdayList = {};
 var ADD_HOUR_TO_UTC = 3;
 
+// start process when the bot start
 birthdayProcesses['1baIl7jbt6seVYrSyJYkVTiL_u8EOOxqDWcCQmAuUpO4'] = {
     "name": "idf_mil",
     "GroupType": "idf",
     "group": "120363041776751646@g.us", // '972526515354-1631541593'
     "userDebug": "120363041776751646@g.us",
-    'checkBirthdayHour': 12
+    'checkBirthdayHour': 10
 }
 
 const url = 'https://docs.google.com/spreadsheets/d/';
@@ -63,9 +57,7 @@ function randomSentence(personName, personAge, GroupType) {
             מאחלים לך את כל הטוב שבעולם🎊🥳`,
             `מזל טוב ל${personName} ליום הולדתו ה-${personAge}🥳
             מאחלים לך הצלחה בכל, תמיד מאחוריך מחלקה 1!`,
-            `הכלניות אדומות
-            הורדים ורודים
-            למי יש יום הולדת
+            `הכלניות אדומות\nהורדים ורודים\nלמי יש יום הולדת
             ל${personName} המדהים🎉🎊
             מזל טוב!🥳`,
             `הידעת?
@@ -157,11 +149,12 @@ function birthday_massege(ssid) {
             var json = JSON.parse(data.substr(47).slice(0, -2));
             rows = json.table.rows;
 
-            dateNow = getIsraelTime()
+            dateNow = getIsraelTime();
             dateHeb = new Hebcal.HDate(dateNow);
-            console.log(`${dateNow}\nHebTime: ${dateHeb}\n-----`)
-            //for testing
-            dateHeb = new Hebcal.HDate(9, "Sh'vat", 5790) //Sh'vat
+            console.log(`${dateNow}\nHebTime: ${dateHeb}\n-----`);
+
+            // For testing - custom date
+            //dateHeb = new Hebcal.HDate(9, "Sh'vat", 5790)
             //dateNow = new Date("2020-08-06")
 
 
@@ -186,7 +179,10 @@ function birthday_massege(ssid) {
                     month_he = element.c[5].v;
                     year_he = element.c[6].v.trim();
                 } catch (error) {
-                    if (datePrefer == "עברי") { client.sendMessage(birthdayProcesses[ssid].userDebug, `ל${personName} יש בעיה בתאריך העברי (חוגג יומולדת עברי)`); }
+                    if (datePrefer == "עברי") {
+                        client.sendMessage(birthdayProcesses[ssid].userDebug,
+                            `ל${personName} יש בעיה בתאריך העברי (חוגג יומולדת עברי)`);
+                    }
                     day_he = ""
                     month_he = ""
                     year_he = ""
@@ -254,7 +250,7 @@ async function check_birthday(ssid) {
             console.log(`--------\nTime: ${todayHour}, --> Start to check birthdays...`)
             client.sendMessage(birthdayProcesses[ssid].userDebug, `השעה: ${todayHour}, --> בודק ימי הולדת...`);
             birthday_massege(ssid)
-        } 
+        }
         /*else {
             console.log(`--------\nTime: ${todayHour}`)
             client.sendMessage(birthdayProcesses[ssid].userDebug, `השעה: ${todayHour}, אני חי! :)`);
@@ -289,9 +285,10 @@ client.on('auth_failure', msg => {
 
 client.on('ready', () => {
     console.log('READY');
-    client.sendMessage(`${groupID_debug}@g.us`, 'הבוט מחובר לחשבון');
+    //const groupID_debug = '120363041776751646'; // only for testing, should be removed
+    //client.sendMessage(`${groupID_debug}@g.us`, 'הבוט מחובר לחשבון');
 
-    for (ssid in birthdayProcesses){
+    for (ssid in birthdayProcesses) {
         check_birthday(ssid)
     }
 });
@@ -354,16 +351,36 @@ client.on('message', async msg => {
                         delete birthdayProcesses[key]
                         msg.reply(`Birthday process ${value.name} has disable`);
                     } else {
-                        msg.reply("You don't have the premision for that");
+                        msg.reply("You don't have the permission for that");
                     }
 
                 }
             }
         }
-    }    
-    // get list
+    }
+    /*###############################
+               get list
+     ################################*/
+    // admin get all, user got what he own
     else if (msg.body === '!birthday-list') {
-        msg.reply("All the birthday processes:\n" + JSON.stringify(birthdayProcesses));
+        var author = msg.author
+        if (author == undefined) {
+            author = msg.from
+        }
+
+        if (BOT_ADMINS.includes(author)) {// || author == value.userDebug
+            msg.reply("All the birthday processes:\n" + JSON.stringify(birthdayProcesses));
+        } else {
+            temp = {}
+            for (const [key, value] of Object.entries(birthdayProcesses)) {
+                if (value.userDebug == author) {
+                    temp[key] = value
+                }
+            }
+            msg.reply("All the birthday processes:\n" + JSON.stringify(temp));
+        }
+
+
     }
 
     /*###############################################
@@ -445,7 +462,7 @@ client.on('message', async msg => {
                 msg.reply('UTC has change to +' + num);
             }
         } else {
-            msg.reply("You don't have the premision for that");
+            msg.reply("You don't have the permission for that");
         }
     }
 
@@ -453,6 +470,7 @@ client.on('message', async msg => {
     // !birthday-sethour {name} {hour}
     else if (msg.body.startsWith('!birthday-sethour')) {
         var words = msg.body.split(' ');
+        var customHour = parseInt(words[2])
 
         var author = msg.author
         if (author == undefined) { author = msg.from }
@@ -461,25 +479,29 @@ client.on('message', async msg => {
             msg.reply('Please Enter again without double whitespace')
         } else if (words.length < 3) {
             // error while setting
-            msg.reply('not enough arguments');
-        } else if (Number.isInteger(words[2])) {
+            msg.reply('Not enough arguments');
+        } else if (Number.isInteger(customHour)) {
             msg.reply('Please Enter vaild time');
         } else {
             for (const [key, value] of Object.entries(birthdayProcesses)) {
                 if (value.name == words[1]) {
                     if (BOT_ADMINS.includes(author) || author == value.userDebug) {
-                        birthdayProcesses[key].checkBirthdayHour = words[2]
-                        msg.reply(`Birthday process ${value.name} hour has changed to ${words[2]}`);
+                        birthdayProcesses[key].checkBirthdayHour = customHour
+                        msg.reply(`Birthday process ${value.name} hour has changed to ${customHour}`);
                     } else {
-                        msg.reply("You don't have the premision for that");
+                        msg.reply("You don't have the permission for that");
                     }
 
                 }
             }
         }
     }
+    else if (msg.body === '!birthday-help') {
+        msg.reply("Visit https://github.com/ZeANi-SHILIX/WhatsAppBirthdayBot");
+    }
 });
 
+// if founded two - return false, if not (no double) return true
 function noDoubleWhitespace(str) {
     var oneWhiteSpcae = false;
     for (let index = 0; index < str.length; index++) {
