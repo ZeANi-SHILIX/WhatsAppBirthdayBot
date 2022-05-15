@@ -1,5 +1,10 @@
-const BOT_ADMINS = ['972507923132@c.us', '972504083675@c.us']; // TODO: commant for adding more
+const { Client, Location, List, Buttons, LocalAuth } = require('whatsapp-web.js');
+const qrcode = require('qrcode-terminal');
+const fetch = require("node-fetch-commonjs");
+const Hebcal = require('hebcal');
+const fs = require('fs');
 
+var BOT_ADMINS = ['972507923132@c.us', '972504083675@c.us']; // TODO: commant for adding more
 var birthdayProcesses = {};
 var birthdayList = {};
 var ADD_HOUR_TO_UTC = 3;
@@ -8,19 +13,19 @@ var ADD_HOUR_TO_UTC = 3;
 birthdayProcesses['1baIl7jbt6seVYrSyJYkVTiL_u8EOOxqDWcCQmAuUpO4'] = {
     "name": "idf_mil",
     "GroupType": "idf",
-    "group": "120363041776751646@g.us", // '972526515354-1631541593'
+    "group": "972526515354-1631541593@g.us",
     "userDebug": "120363041776751646@g.us",
     'checkBirthdayHour': 10
 }
 
+write_AdminsFile(BOT_ADMINS);
+write_BirthdayProcesses(birthdayProcesses);
+BOT_ADMINS = read_AdminsFile();
+birthdayProcesses = read_BirthdayProcesses();
+
 const url = 'https://docs.google.com/spreadsheets/d/';
 const q1 = '/gviz/tq?';
 const q2 = 'tqx=out:json';
-
-const { Client, Location, List, Buttons, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
-const fetch = require("node-fetch-commonjs");
-const Hebcal = require('hebcal');
 
 const client = new Client({
     authStrategy: new LocalAuth(),
@@ -30,12 +35,6 @@ const client = new Client({
     },
 
 });
-function getIsraelTime() {
-    var d = new Date();
-    return new Date(new Date(d).setHours(d.getUTCHours() + ADD_HOUR_TO_UTC));
-}
-
-
 
 function randomSentence(personName, personAge, GroupType) {
     var sentencelist = {
@@ -95,49 +94,7 @@ function randomSentence(personName, personAge, GroupType) {
 
 }
 
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
 
-function convertToNumber(str) {
-    if (str == "" || str == null) return 0
-    if (str.length == 1) {
-        return asciiConvertor(str)
-    }
-    sum = 0
-    for (var i = 0; i < str.length; i++) {
-        sum += asciiConvertor(str[i])
-    }
-    return sum;
-}
-function asciiConvertor(char) {
-
-    if (char.length != 1) return 0
-    ascii = char.codePointAt(0);
-    if (ascii > 1487 && ascii < 1498) return ascii - 1487
-    if (ascii > 1498 && ascii < 1501) return (ascii - 1497) * 10
-    if (ascii == 1502) return (ascii - 1498) * 10
-    if (ascii > 1503 && ascii < 1507) return (ascii - 1499) * 10
-    if (ascii == 1508) return (ascii - 1500) * 10
-    if (ascii == 1510) return (ascii - 1501) * 10
-    if (ascii > 1510 && ascii < 1515) return (ascii - 1510) * 100
-    //console.log("asciiConvertor active" + ascii)
-    return 0
-}
-
-function comperDate(dateNow, birthdayLoazi, dateHeb, birthdayHeb, datePrefer) {
-    if (datePrefer == 'עברי') {
-        if (dateHeb.month == birthdayHeb.month && dateHeb.day == birthdayHeb.day) {
-            return dateHeb.year - birthdayHeb.year;
-        }
-    }
-    if (datePrefer == 'לועזי') {
-        if (dateNow.getMonth() == birthdayLoazi.getMonth() && dateNow.getDate() == birthdayLoazi.getDate()) {
-            return dateNow.getFullYear() - birthdayLoazi.getFullYear();
-        }
-    }
-    return 0;
-}
 
 function birthday_massege(ssid) {
     birthdayList[ssid] = [];
@@ -161,6 +118,11 @@ function birthday_massege(ssid) {
 
             // loop on all the rows (for each person)
             rows.forEach(element => {
+
+                // TODO - move to other function (more readable)
+                // will return object
+
+
                 /*
                 c - cell
                 v - value
@@ -285,8 +247,6 @@ client.on('auth_failure', msg => {
 
 client.on('ready', () => {
     console.log('READY');
-    //const groupID_debug = '120363041776751646'; // only for testing, should be removed
-    //client.sendMessage(`${groupID_debug}@g.us`, 'הבוט מחובר לחשבון');
 
     for (ssid in birthdayProcesses) {
         check_birthday(ssid)
@@ -327,6 +287,7 @@ client.on('message', async msg => {
 
         if (BOT_ADMINS.includes(author)) {
             birthdayProcesses = {};
+            write_BirthdayProcesses(birthdayProcesses);
             msg.reply('All the Birthday process turned off');
         } else {
             msg.reply("You don't have the premision for that");
@@ -349,6 +310,7 @@ client.on('message', async msg => {
                 if (value.name == words[1]) {
                     if (BOT_ADMINS.includes(author) || author == value.userDebug) {
                         delete birthdayProcesses[key]
+                        write_BirthdayProcesses(birthdayProcesses);
                         msg.reply(`Birthday process ${value.name} has disable`);
                     } else {
                         msg.reply("You don't have the permission for that");
@@ -368,7 +330,7 @@ client.on('message', async msg => {
             author = msg.from
         }
 
-        if (BOT_ADMINS.includes(author)) {// || author == value.userDebug
+        if (BOT_ADMINS.includes(author)) {
             msg.reply("All the birthday processes:\n" + JSON.stringify(birthdayProcesses));
         } else {
             temp = {}
@@ -424,12 +386,14 @@ client.on('message', async msg => {
                                 "userDebug": author,
                                 'checkBirthdayHour': 10
                             }
+                            write_BirthdayProcesses(birthdayProcesses);
+
                             // start the process
                             check_birthday(words[1]);
-                            msg.reply('Start running ' + words[2]);
+                            msg.reply('Starting ' + words[2]);
 
                         } else {
-                            msg.reply('Already running');
+                            msg.reply(`This table used in ${birthdayProcesses[words[1]].name} processe`);
                         }
 
 
@@ -487,6 +451,7 @@ client.on('message', async msg => {
                 if (value.name == words[1]) {
                     if (BOT_ADMINS.includes(author) || author == value.userDebug) {
                         birthdayProcesses[key].checkBirthdayHour = customHour
+                        write_BirthdayProcesses(birthdayProcesses);
                         msg.reply(`Birthday process ${value.name} hour has changed to ${customHour}`);
                     } else {
                         msg.reply("You don't have the permission for that");
@@ -500,6 +465,57 @@ client.on('message', async msg => {
         msg.reply("Visit https://github.com/ZeANi-SHILIX/WhatsAppBirthdayBot");
     }
 });
+
+
+
+/*######################################################
+                  other functions
+########################################################*/
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function convertToNumber(str) {
+    if (str == "" || str == null) return 0
+    if (str.length == 1) {
+        return asciiConvertor(str)
+    }
+    sum = 0
+    for (var i = 0; i < str.length; i++) {
+        sum += asciiConvertor(str[i])
+    }
+    return sum;
+}
+
+function asciiConvertor(char) {
+
+    if (char.length != 1) return 0
+    ascii = char.codePointAt(0);
+    if (ascii > 1487 && ascii < 1498) return ascii - 1487
+    if (ascii > 1498 && ascii < 1501) return (ascii - 1497) * 10
+    if (ascii == 1502) return (ascii - 1498) * 10
+    if (ascii > 1503 && ascii < 1507) return (ascii - 1499) * 10
+    if (ascii == 1508) return (ascii - 1500) * 10
+    if (ascii == 1510) return (ascii - 1501) * 10
+    if (ascii > 1510 && ascii < 1515) return (ascii - 1510) * 100
+    //console.log("asciiConvertor active" + ascii)
+    return 0
+}
+
+function comperDate(dateNow, birthdayLoazi, dateHeb, birthdayHeb, datePrefer) {
+    if (datePrefer == 'עברי') {
+        if (dateHeb.month == birthdayHeb.month && dateHeb.day == birthdayHeb.day) {
+            return dateHeb.year - birthdayHeb.year;
+        }
+    }
+    if (datePrefer == 'לועזי') {
+        if (dateNow.getMonth() == birthdayLoazi.getMonth() && dateNow.getDate() == birthdayLoazi.getDate()) {
+            return dateNow.getFullYear() - birthdayLoazi.getFullYear();
+        }
+    }
+    return 0;
+}
 
 // if founded two - return false, if not (no double) return true
 function noDoubleWhitespace(str) {
@@ -515,4 +531,55 @@ function noDoubleWhitespace(str) {
         }
     }
     return true;
+}
+
+function getIsraelTime() {
+    var d = new Date();
+    return new Date(new Date(d).setHours(d.getUTCHours() + ADD_HOUR_TO_UTC));
+}
+
+function read_AdminsFile(){
+    try {
+        const text = fs.readFileSync('saved_files/admins.json', 'utf8');
+        var text_json = JSON.parse(text);
+        console.log(text_json);
+        return text_json;
+    } catch (err) {
+        console.log(err)
+    }
+    return [];
+}
+
+function read_BirthdayProcesses(){
+    try {
+        const text = fs.readFileSync('saved_files/birthdayProcesses.json', 'utf8');
+        var text_json = JSON.parse(text);
+        console.log(text_json);
+        return text_json;
+    } catch (err) {
+        console.log(err)
+    }
+    return {};
+}
+
+function write_BirthdayProcesses(content){
+    try {
+        if (!fs.existsSync('saved_files')) {
+            fs.mkdirSync('saved_files');
+        }
+        fs.writeFileSync('saved_files/birthdayProcesses.json', JSON.stringify(content));
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+function write_AdminsFile(content){
+    try {
+        if (!fs.existsSync('saved_files')) {
+            fs.mkdirSync('saved_files');
+        }
+        fs.writeFileSync('saved_files/admins.json', JSON.stringify(content));
+    } catch (err) {
+        console.error(err);
+    }
 }
