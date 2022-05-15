@@ -16,7 +16,7 @@ birthdayProcesses['1baIl7jbt6seVYrSyJYkVTiL_u8EOOxqDWcCQmAuUpO4'] = {
     "GroupType": "idf",
     "group": "120363041776751646@g.us", // '972526515354-1631541593'
     "userDebug": "120363041776751646@g.us",
-    'checkBirthdayHour': 10
+    'checkBirthdayHour': 12
 }
 
 const url = 'https://docs.google.com/spreadsheets/d/';
@@ -246,17 +246,19 @@ function birthday_massege(ssid) {
 }
 
 async function check_birthday(ssid) {
+    client.sendMessage(birthdayProcesses[ssid].userDebug, `כעת העדכונים של הבוט עבור ${birthdayProcesses[ssid].name}, ישלחו כאן`);
 
     while (true) {
         var todayHour = getIsraelTime().getHours();
         if (todayHour == birthdayProcesses[ssid].checkBirthdayHour) {
             console.log(`--------\nTime: ${todayHour}, --> Start to check birthdays...`)
-            client.sendMessage(birthdayProcesses[ssid].userDebug, `השעה: ${todayHour}, --> זמן לבדוק ימי הולדת...`);
+            client.sendMessage(birthdayProcesses[ssid].userDebug, `השעה: ${todayHour}, --> בודק ימי הולדת...`);
             birthday_massege(ssid)
-        } else {
+        } 
+        /*else {
             console.log(`--------\nTime: ${todayHour}`)
             client.sendMessage(birthdayProcesses[ssid].userDebug, `השעה: ${todayHour}, אני חי! :)`);
-        }
+        }*/
 
         /*  1000*60         is a minute 
             1000*60*60      is a hour
@@ -416,7 +418,7 @@ client.on('message', async msg => {
 
 
                     } catch (error) {
-                        console.log('Error - no table')
+                        console.log(error)
                         msg.reply('Error with the table');
                     }
                 })
@@ -467,7 +469,7 @@ client.on('message', async msg => {
                 if (value.name == words[1]) {
                     if (BOT_ADMINS.includes(author) || author == value.userDebug) {
                         birthdayProcesses[key].checkBirthdayHour = words[2]
-                        msg.reply(`Birthday process ${value.name} has disable`);
+                        msg.reply(`Birthday process ${value.name} hour has changed to ${words[2]}`);
                     } else {
                         msg.reply("You don't have the premision for that");
                     }
