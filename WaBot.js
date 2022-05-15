@@ -287,7 +287,7 @@ client.on('auth_failure', msg => {
 
 client.on('ready', () => {
     console.log('READY');
-    client.sendMessage(`${groupID_debug}@g.us`, 'הבוט (מחשב) מחובר לחשבון');
+    client.sendMessage(`${groupID_debug}@g.us`, 'הבוט מחובר לחשבון');
 
     for (ssid in birthdayProcesses){
         check_birthday(ssid)
