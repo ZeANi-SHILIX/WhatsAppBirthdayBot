@@ -4,7 +4,8 @@ const fetch = require("node-fetch-commonjs");
 const Hebcal = require('hebcal');
 const fs = require('fs');
 
-var BOT_ADMINS = []; // TODO: commant for adding more
+const BIRTHDAY_BOT_VERSION = 1.0;
+var BOT_ADMINS = [];
 var birthdayProcesses = {};
 var birthdayList = {};
 var ADD_HOUR_TO_UTC = 3;
@@ -12,10 +13,10 @@ var ADD_HOUR_TO_UTC = 3;
 /* start process when the bot start
 birthdayProcesses['ssid'] = {
     "name": "{name}",
-    "GroupType": "{type",
+    "GroupType": "{type}",
     "group": "{XXXXXXX@g.us}",
-    "userDebug": "XXXXXXXXXX@c.us",
-    'checkBirthdayHour': 10
+    "userDebug": "{XXXXXXXXXX@c.us}",
+    'checkBirthdayHour': "{10}"
 } */
 
 BOT_ADMINS = read_AdminsFile();
@@ -45,40 +46,14 @@ function randomSentence(personName, personAge, GroupType) {
         ],
         "idf": [
             `מזל טוב ${personName} להגיעך ל${personAge}\nמחלקה 1 במיל' מצדיעה לך על שירותך המסור, אוהבים אותך ומעריכים מאוד`,
-            `🎼היום יום הולדת
-            היום יום הולדת
-            היום יום הולדת ל${personName}🎊🎉
-            מזלללל טובבבב🥳
-            מה תאחלו לו?`,
-            `מזל טוב ל${personName} שהזדקן בעוד שנה👻
-            מאחלים לך את כל הטוב שבעולם🎊🥳`,
-            `מזל טוב ל${personName} ליום הולדתו ה-${personAge}🥳
-            מאחלים לך הצלחה בכל, תמיד מאחוריך מחלקה 1!`,
-            `הכלניות אדומות\nהורדים ורודים\nלמי יש יום הולדת
-            ל${personName} המדהים🎉🎊
-            מזל טוב!🥳`,
-            `הידעת?
-            היום לפני ${personAge} שנים ${personName} נולד!🎊🥳 
-            מה תאחלו לו?`,
-            `אחשלנו היקר ${personName} אוהבים אותך מאוד, גם אם לא באת מהפלחוד,מאחלים לך מזל טוב ענק לרגל יום הולדתך ה${personAge}, שתהיה לך שנה מאושרת ושמחה,
-            בריאות, עושר, וצמיחה.
-            שאת כל משאלותיך תגשים ותזכור לא לשים על אנשים.
-            תישאר כמו שאתה יא כוכב
-            כל אחד מאיתנו בך מאוהב
-            אוהבים מחלקה 1 במילואים!`,
-            `מזל טוב ${personName} נשמה שכמוך שתהיה לך שנה מטורפת, של הגשמה, מימוש עצמי, סיפוק, בשמחה בריאות עושר וכושר,
-            תשמח תשיר ותרקוד,
-            ותמשיך בדרכך לצעוד,
-            אוהבים מחלקה 1 במילואים!`,
-            `תחזיקו חזק כי היום המזל טוב הולך ישר ל${personName} !!! כן כן,
-            לא ידעתם לא סיפרנו אבל היום ${personAge} הוא חוגג 
-           ולעשות מסיבה אצלו בגג כל שנה הוא נוהג
-           שתהיה לך שנה מלאה בטוב,
-           שתדע להנות לשמוח ולאהוב 
-           והכי חשוב תפסיק להיות צהוב
-           אוהבים מחלקה 1 במילואים!`
-
-
+            `🎼היום יום הולדת\nהיום יום הולדת\nהיום יום הולדת ל${personName}🎊🎉\nמזלללל טובבבב🥳\nמה תאחלו לו?`,
+            `מזל טוב ל${personName} שהזדקן בעוד שנה👻\nמאחלים לך את כל הטוב שבעולם🎊🥳`,
+            `מזל טוב ל${personName} ליום הולדתו ה-${personAge}🥳\nמאחלים לך הצלחה בכל, תמיד מאחוריך מחלקה 1!`,
+            `הכלניות אדומות\nהורדים ורודים\nלמי יש יום הולדת\nל${personName} המדהים🎉🎊\n\nמזל טוב!🥳`,
+            `הידעת?\nהיום לפני ${personAge} שנים ${personName} נולד!🎊🥳 \nמה תאחלו לו?`,
+            `אחשלנו היקר ${personName} אוהבים אותך מאוד, גם אם לא באת מהפלחוד,מאחלים לך מזל טוב ענק לרגל יום הולדתך ה${personAge}, שתהיה לך שנה מאושרת ושמחה,\nבריאות, עושר, וצמיחה.\nשאת כל משאלותיך תגשים ותזכור לא לשים על אנשים.\nתישאר כמו שאתה יא כוכב\nכל אחד מאיתנו בך מאוהב\nאוהבים מחלקה 1 במילואים!`,
+            `מזל טוב ${personName} נשמה שכמוך שתהיה לך שנה מטורפת, של הגשמה, מימוש עצמי, סיפוק, בשמחה בריאות עושר וכושר,\nתשמח תשיר ותרקוד,\nותמשיך בדרכך לצעוד,\nאוהבים מחלקה 1 במילואים!`,
+            `תחזיקו חזק כי היום המזל טוב הולך ישר ל${personName} !!! כן כן,\nלא ידעתם לא סיפרנו אבל היום ${personAge} הוא חוגג \nולעשות מסיבה אצלו בגג כל שנה הוא נוהג\nשתהיה לך שנה מלאה בטוב,\nשתדע להנות לשמוח ולאהוב \nוהכי חשוב תפסיק להיות צהוב\nאוהבים מחלקה 1 במילואים!`
         ]
     }
     try {
@@ -116,75 +91,17 @@ function birthday_massege(ssid) {
 
             // loop on all the rows (for each person)
             rows.forEach(element => {
+                var person = readRowsFromGoogleSheet(element);
+                //console.log(person)
 
-                // TODO - move to other function (more readable)
-                // will return object
-
-
-                /*
-                c - cell
-                v - value
-                f - format
-                */
-                try {
-                    PersonName = element.c[1].v;
-                    datePrefer = element.c[2].v;
-                    birthdayLoazi = element.c[3].f;
-                } catch (error) {
-                    console.log(error)
+                if (!person.currectHebDate && person.datePrefer == 'עברי') {
+                    client.sendMessage(birthdayProcesses[ssid].userDebug,
+                        `ל${person.name} יש בעיה בתאריך העברי (חוגג יומולדת עברי)`);
                 }
 
-                try {
-                    day_he = element.c[4].v.trim();
-                    month_he = element.c[5].v;
-                    year_he = element.c[6].v.trim();
-                } catch (error) {
-                    if (datePrefer == "עברי") {
-                        client.sendMessage(birthdayProcesses[ssid].userDebug,
-                            `ל${personName} יש בעיה בתאריך העברי (חוגג יומולדת עברי)`);
-                    }
-                    day_he = ""
-                    month_he = ""
-                    year_he = ""
-                }
-                try {
-                    phoneNum = element.c[7].v;
-                } catch (error) {
-                    //console.log("no phone number")
-                    phoneNum = ""
-                }
-                try {
-                    emailAdress = element.c[8].v;
-                } catch (error) {
-                    //console.log("no email")
-                    emailAdress = ""
-                }
-
-
-                console.log(PersonName + "\n" +
-                    datePrefer + "\n" +
-                    birthdayLoazi
-                    // + "\n" + day_he + " " + month_he + " " + year_he 
-                    // + "\n" +phoneNum + "\n" + emailAdress
-                )
-
-                // make HDate
-                if (year_he[0] == 'ה') { year_he = year_he.slice(1) }
-                year_he_num = 5000 + convertToNumber(year_he)
-
-                day_he_num = convertToNumber(day_he)
-                birthdayHeb = new Hebcal.HDate(day_he_num, month_he, year_he_num);
-
-                // fix Loazi Date
-                var birthday_array = birthdayLoazi.split("/");
-                birthdayLoazi = new Date(birthday_array[2], birthday_array[1] - 1, birthday_array[0]); //month start from 0 
-
-                age = comperDate(dateNow, birthdayLoazi, dateHeb, birthdayHeb, datePrefer)
-
-                console.log(`${birthdayHeb}\n--------`)
-
+                age = comperDate(dateNow, person.LoaziDate, dateHeb, person.HebDate, person.datePrefer)
                 if (age > 0) {
-                    birthdayList[ssid].push({ "name": PersonName, "age": age })
+                    birthdayList[ssid].push({ "name": person.name, "age": age })
                 }
             });
         })
@@ -207,8 +124,8 @@ async function check_birthday(ssid) {
     while (true) {
         var todayHour = getIsraelTime().getHours();
         if (todayHour == birthdayProcesses[ssid].checkBirthdayHour) {
-            console.log(`--------\nTime: ${todayHour}, --> Start to check birthdays...`)
-            client.sendMessage(birthdayProcesses[ssid].userDebug, `השעה: ${todayHour}, --> בודק ימי הולדת...`);
+            console.log(`--------\nTime: ${todayHour}, --> Start to check birthdays at ${birthdayProcesses[ssid].name}...`)
+            client.sendMessage(birthdayProcesses[ssid].userDebug, `השעה: ${todayHour}, --> בודק ימי הולדת ב${birthdayProcesses[ssid].name}...`);
             birthday_massege(ssid)
         }
         /*else {
@@ -339,13 +256,69 @@ client.on('message', async msg => {
             }
             msg.reply("All the birthday processes:\n" + JSON.stringify(temp));
         }
-
-
     }
 
     /*###############################################
      start process - !birthday-start ssid name type
      ################################################*/
+
+    // !birthday-start-json {jsonformat}
+    else if (msg.body.startsWith('!birthday-start-json')) {
+        str = msg.body.slice(20);
+        try {
+            var str_obj = JSON.parse(str);
+
+            // check all the input
+            var isBirthdayProcesse = true;
+            for (k in str_obj) {
+                if (!("name" in str_obj[k])) { isBirthdayProcesse = false }
+                if (!("GroupType" in str_obj[k])) { isBirthdayProcesse = false }
+                if (!("group" in str_obj[k])) { isBirthdayProcesse = false }
+                if (!("userDebug" in str_obj[k])) { isBirthdayProcesse = false }
+                if (!("checkBirthdayHour" in str_obj[k])) { isBirthdayProcesse = false }
+            }
+
+            if (isBirthdayProcesse) {
+                sharedProcesses = Object.keys(birthdayProcesses).filter({}.hasOwnProperty.bind(str_obj));
+                console.log(sharedProcesses)
+
+                for (index in sharedProcesses) {
+                    msg.reply(`The processe *${str_obj[sharedProcesses[index]].name}* already exist as *${birthdayProcesses[sharedProcesses[index]].name}*`);
+                    delete str_obj[sharedProcesses[index]];
+                }
+
+                for (ssid in str_obj) {
+                    let url2 = `${url}${ssid}${q1}&${q2}`;
+                    fetch(url2)
+                        .then(res => res.text())
+                        .then(data => {
+                            try {
+                                // is it data table?
+                                var json = JSON.parse(data.substr(47).slice(0, -2));
+
+                                birthdayProcesses[ssid] = str_obj[ssid];
+                                write_BirthdayProcesses(birthdayProcesses);
+
+                                // start the process
+                                msg.reply('Starting ' + str_obj[ssid].name + " processe");
+                                check_birthday(ssid);
+                                
+                            } catch (e) {
+                                msg.reply('Not valid input: wrong ssid\n' + url2)
+                                console.log(e)
+                            }
+                        })
+                }
+
+            } else {
+                msg.reply('Not valid input: not a Birthday Processe');
+            }
+
+        } catch (e) {
+            msg.reply('Not valid input: not a json format');
+        }
+    }
+
 
     // !birthday-start {ssid} {name} {type} 
     else if (msg.body.startsWith('!birthday-start')) {
@@ -355,8 +328,7 @@ client.on('message', async msg => {
             msg.reply('Please Enter again without double whitespace')
         } else if (words.length < 3) {
             // error while setting
-            msg.reply('not enough arguments');
-
+            msg.reply('Not enough arguments\nplease enter in this order:\n!birthday-start {ssid} {name} {type}');
         } else {
             //check if vaild
             let url1 = `${url}${words[1]}${q1}&${q2}`;
@@ -382,19 +354,17 @@ client.on('message', async msg => {
                                 "GroupType": GroupType,
                                 "group": msg.from,
                                 "userDebug": author,
-                                'checkBirthdayHour': 10
+                                "checkBirthdayHour": 10
                             }
                             write_BirthdayProcesses(birthdayProcesses);
 
                             // start the process
-                            check_birthday(words[1]);
                             msg.reply('Starting ' + words[2]);
-
+                            check_birthday(words[1]);
+                            
                         } else {
                             msg.reply(`This table used in ${birthdayProcesses[words[1]].name} processe`);
                         }
-
-
 
                     } catch (error) {
                         console.log(error)
@@ -402,8 +372,8 @@ client.on('message', async msg => {
                     }
                 })
         }
-
     }
+
 
     /*##############################
                 Others
@@ -419,7 +389,7 @@ client.on('message', async msg => {
             if (noDoubleWhitespace(msg.body) == false) {
                 msg.reply('Please Enter again without double whitespace')
             } else {
-                num = str.replace(/^\D+/g, "");
+                num = msg.body.replace(/^\D+/g, "");
                 ADD_HOUR_TO_UTC = num;
                 msg.reply('UTC has change to +' + num);
             }
@@ -441,7 +411,7 @@ client.on('message', async msg => {
             msg.reply('Please Enter again without double whitespace')
         } else if (words.length < 3) {
             // error while setting
-            msg.reply('Not enough arguments');
+            msg.reply('Not enough arguments\nplease enter in this order:\n!birthday-sethour {name} {hour}');
         } else if (Number.isInteger(customHour)) {
             msg.reply('Please Enter vaild time');
         } else {
@@ -462,6 +432,77 @@ client.on('message', async msg => {
     else if (msg.body === '!birthday-help') {
         msg.reply("Visit https://github.com/ZeANi-SHILIX/WhatsAppBirthdayBot");
     }
+    else if (msg.body === '!info') {
+        msg.reply("This bot developed by Shilo Babila\n\nVersion:" + BIRTHDAY_BOT_VERSION);
+    }
+
+    /*#########################
+             admins
+     ##########################*/
+    else if (msg.body === '!get-admins') {
+        author = (await msg.getContact()).id._serialized
+        //console.log(author)
+        if (BOT_ADMINS.length === 0) {
+            msg.reply("There isn't admin for this bot");
+        }
+        else if (BOT_ADMINS.includes(author)) {
+            msg.reply("Admins list:\n" + JSON.stringify(BOT_ADMINS));
+        }
+        else {
+            msg.reply("You don't have the permission for that");
+        }
+    }
+    // !set-admins {mentions}/{QuotedMsg}
+    else if (msg.body.startsWith('!set-admins')) {
+        author = (await msg.getContact()).id._serialized;
+
+        if (BOT_ADMINS.includes(author) || BOT_ADMINS.length === 0) {
+            mentions = msg.mentionedIds
+            if (mentions.length != 0) {
+                for (index in mentions) {
+                    addAdmin(mentions[index], msg);
+                }
+            }
+
+            if (msg.hasQuotedMsg) {
+                quoted_msg = await msg.getQuotedMessage();
+                quoted_id = (await quoted_msg.getContact()).id._serialized;
+                if (!mentions.includes(quoted_id)) {
+                    addAdmin(quoted_id, msg);
+                }
+            }
+
+        } else {
+            msg.reply("You don't have the permission for that");
+        }
+    }
+    // !unset-admins {mentions}/{QuotedMsg}
+    else if (msg.body.startsWith('!unset-admins')) {
+        author = (await msg.getContact()).id._serialized;
+
+        if (BOT_ADMINS.length === 0) {
+            msg.reply("The admins list is empty");
+        }
+        else if (BOT_ADMINS.includes(author)) {
+            mentions = msg.mentionedIds
+            if (mentions.length != 0) {
+                for (index in mentions) {
+                    removeAdmin(mentions[index], msg);
+                }
+            }
+
+            if (msg.hasQuotedMsg) {
+                quoted_msg = await msg.getQuotedMessage();
+                quoted_id = (await quoted_msg.getContact()).id._serialized;
+                if (!mentions.includes(quoted_id)) {
+                    removeAdmin(quoted_id, msg);
+                }
+            }
+
+        } else {
+            msg.reply("You don't have the permission for that");
+        }
+    }
 });
 
 
@@ -469,6 +510,38 @@ client.on('message', async msg => {
 /*######################################################
                   other functions
 ########################################################*/
+
+function addAdmin(id, msg) {
+    if (!BOT_ADMINS.includes(id)) {
+        BOT_ADMINS.push(id) // add
+        console.log(id + " Added to Admins")
+        msg.reply(id + " Added to admins");
+    } else {
+        console.log(id + " Already Admin")
+        msg.reply(id + " Already Admin");
+    }
+    write_AdminsFile(BOT_ADMINS)
+}
+
+function removeAdmin(id, msg) {
+    if (BOT_ADMINS.includes(id)) {
+        BOT_ADMINS = removeItemOnce(BOT_ADMINS, id); // remove
+        console.log(id + " Removed from Admins")
+        msg.reply(id + "  Removed from admins");
+    } else {
+        console.log(id + " Isn't Admin")
+        msg.reply(id + " Isn't Admin");
+    }
+    write_AdminsFile(BOT_ADMINS)
+}
+
+function removeItemOnce(arr, value) {
+    var index = arr.indexOf(value);
+    if (index > -1) {
+        arr.splice(index, 1);
+    }
+    return arr;
+}
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -499,6 +572,89 @@ function asciiConvertor(char) {
     if (ascii > 1510 && ascii < 1515) return (ascii - 1510) * 100
     //console.log("asciiConvertor active" + ascii)
     return 0
+}
+
+function readRowsFromGoogleSheet(element) {
+    /*
+    c - cell
+    v - value
+    f - format
+    */
+
+    var PersonName = "Error"
+    var datePrefer = ""
+    var birthdayLoazi = ""
+    var got_error = false
+    try {
+        PersonName = element.c[1].v;
+        datePrefer = element.c[2].v;
+        birthdayLoazi = element.c[3].f;
+    } catch (error) {
+        //console.log(error)
+        got_error = true
+    }
+
+    var currectHebDate = true
+    var day_he = "", month_he = "", year_he = "", phoneNum = "", emailAdress = ""
+    try {
+        day_he = element.c[4].v.trim();
+        month_he = element.c[5].v;
+        year_he = element.c[6].v.trim();
+    } catch (error) {
+        //console.log(error)
+        currectHebDate = false
+        got_error = true
+    }
+    try {
+        phoneNum = element.c[7].v;
+    } catch (error) {
+        //console.log(error)
+        got_error = true
+    }
+    try {
+        emailAdress = element.c[8].v;
+    } catch (error) {
+        //console.log(error)
+        got_error = true
+    }
+    if (got_error) { console.log(element.c) }
+
+
+
+    // make HDate
+    if (year_he[0] == 'ה') { year_he = year_he.slice(1) }
+    year_he_num = 5000 + convertToNumber(year_he)
+
+    day_he_num = convertToNumber(day_he)
+    var birthdayHeb = new Hebcal.HDate(day_he_num, month_he, year_he_num);
+
+    // fix Loazi Date
+    if (birthdayLoazi.includes("/")) {
+        var birthday_array = birthdayLoazi.split("/");
+    } else if (birthdayLoazi.includes("-")) {
+        var birthday_array = birthdayLoazi.split("-");
+    } else {
+        console.log('Unknown date format: ' + birthdayLoazi)
+        var birthday_array = ["", "", ""];
+    }
+    birthdayLoazi = new Date(
+        birthday_array[2],
+        birthday_array[1] - 1,  //month start from 0 
+        birthday_array[0]);
+
+    //console.log(`${PersonName}\n${datePrefer}\n${birthdayLoazi}\n${birthdayHeb}\n--------`)
+    // + "\n" + day_he + " " + month_he + " " + year_he + "\n" +phoneNum + "\n" + emailAdress
+
+
+    return {
+        "name": PersonName,
+        "datePrefer": datePrefer,
+        "LoaziDate": birthdayLoazi,
+        "HebDate": birthdayHeb,
+        "phone": phoneNum,
+        "email": emailAdress,
+        "currectHebDate": currectHebDate
+    }
 }
 
 function comperDate(dateNow, birthdayLoazi, dateHeb, birthdayHeb, datePrefer) {
@@ -536,7 +692,7 @@ function getIsraelTime() {
     return new Date(new Date(d).setHours(d.getUTCHours() + ADD_HOUR_TO_UTC));
 }
 
-function read_AdminsFile(){
+function read_AdminsFile() {
     try {
         const text = fs.readFileSync('saved_files/admins.json', 'utf8');
         var text_json = JSON.parse(text);
@@ -548,7 +704,7 @@ function read_AdminsFile(){
     return [];
 }
 
-function read_BirthdayProcesses(){
+function read_BirthdayProcesses() {
     try {
         const text = fs.readFileSync('saved_files/birthdayProcesses.json', 'utf8');
         var text_json = JSON.parse(text);
@@ -560,7 +716,7 @@ function read_BirthdayProcesses(){
     return {};
 }
 
-function write_BirthdayProcesses(content){
+function write_BirthdayProcesses(content) {
     try {
         if (!fs.existsSync('saved_files')) {
             fs.mkdirSync('saved_files');
@@ -571,7 +727,7 @@ function write_BirthdayProcesses(content){
     }
 }
 
-function write_AdminsFile(content){
+function write_AdminsFile(content) {
     try {
         if (!fs.existsSync('saved_files')) {
             fs.mkdirSync('saved_files');
