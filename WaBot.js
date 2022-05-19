@@ -44,6 +44,13 @@ function randomSentence(personName, personAge, GroupType) {
             `למי יש יומולדת? למי יש יומולדת?\nל${personName} יש יומולדת!!\nמזל טוב להגיעך ל ${personAge}! עד 120 שנה :)`,
 
         ],
+        "family": [
+            `🎼היום יום הולדת\nהיום יום הולדת\nהיום יום הולדת ל${personName}🎊🎉\nמזלללל טובבבב🥳`,
+            `מזל טוב ל${personName}!🥳🥳 ${personAge}!!\nעד 120 שנה`,
+            `כשצוחקים זה נחמד, כשמחייכים זה מיוחד!😁\nכשנותנים ברכה זה מקרב, וכשאומרים מזל טוב ליום הולדת זה מחמם את הלב!🤗\n*מזל טוב ${personName}!🥰 יומולדת ${personAge} שנה שמח!🥳*`,
+            `קולולולולו!!!🎊🎉\n *${personName} חוגג יומולדת  ${personAge} היום!!*\nהמון מזל טוב!!🥳`,
+            `מזל טוב ${personName} ליום הולדתך!🥳\n\nיבואו על ראשך ברכות וטובות\nשבתורה מובאות וכתובות\nועוד שנים נעימות ורבות\nממני - הבוט🤖`
+        ],
         "idf": [
             `מזל טוב ${personName} להגיעך ל${personAge}\nמחלקה 1 במיל' מצדיעה לך על שירותך המסור, אוהבים אותך ומעריכים מאוד`,
             `🎼היום יום הולדת\nהיום יום הולדת\nהיום יום הולדת ל${personName}🎊🎉\nמזלללל טובבבב🥳\nמה תאחלו לו?`,
@@ -81,12 +88,16 @@ function birthday_massege(ssid) {
 
             dateNow = getIsraelTime();
             dateHeb = new Hebcal.HDate(dateNow);
-            console.log(`${dateNow}\nHebTime: ${dateHeb}\n-----`);
 
             // For testing - custom date
             //dateHeb = new Hebcal.HDate(9, "Sh'vat", 5790)
             //dateNow = new Date("2020-08-06")
+            //dateHeb = new Hebcal.HDate(new Date("May 19 2022 23:33:47"))
 
+            // ### => move manualy to next day after sunset (module not working)
+            dateHeb = fixHebDate(dateHeb);
+            
+            console.log(`${dateNow}\nHebTime: ${dateHeb}\n-----`);
 
 
             // loop on all the rows (for each person)
@@ -433,7 +444,7 @@ client.on('message', async msg => {
         msg.reply("Visit https://github.com/ZeANi-SHILIX/WhatsAppBirthdayBot");
     }
     else if (msg.body === '!info') {
-        msg.reply("This bot developed by Shilo Babila\n\nVersion:" + BIRTHDAY_BOT_VERSION);
+        msg.reply("*This bot developed by Shilo Babila*\nVersion: " + BIRTHDAY_BOT_VERSION);
     }
 
     /*#########################
@@ -563,14 +574,19 @@ function asciiConvertor(char) {
 
     if (char.length != 1) return 0
     ascii = char.codePointAt(0);
-    if (ascii > 1487 && ascii < 1498) return ascii - 1487
-    if (ascii > 1498 && ascii < 1501) return (ascii - 1497) * 10
-    if (ascii == 1502) return (ascii - 1498) * 10
-    if (ascii > 1503 && ascii < 1507) return (ascii - 1499) * 10
-    if (ascii == 1508) return (ascii - 1500) * 10
-    if (ascii == 1510) return (ascii - 1501) * 10
-    if (ascii > 1510 && ascii < 1515) return (ascii - 1510) * 100
-    //console.log("asciiConvertor active" + ascii)
+    //console.log(char + " is " + ascii)
+    if (ascii > 1487 && ascii < 1498) return ascii - 1487           // א-י
+    if (ascii == 1498) return (ascii - 1496) * 10                   // ך
+    if (ascii > 1498 && ascii < 1501) return (ascii - 1497) * 10    // כ-ל
+    if (ascii == 1501) return (ascii - 1497) * 10                   // ם
+    if (ascii == 1502) return (ascii - 1498) * 10                   // מ
+    if (ascii == 1503) return (ascii - 1498) * 10                   // ן
+    if (ascii > 1503 && ascii < 1507) return (ascii - 1499) * 10    // נ-ע
+    if (ascii == 1507) return (ascii - 1499) * 10                   // ף
+    if (ascii == 1508) return (ascii - 1500) * 10                   // פ
+    if (ascii == 1509) return (ascii - 1500) * 10                   // ץ
+    if (ascii == 1510) return (ascii - 1501) * 10                   // צ
+    if (ascii > 1510 && ascii < 1515) return (ascii - 1510) * 100   // ק-ת
     return 0
 }
 
@@ -736,4 +752,15 @@ function write_AdminsFile(content) {
     } catch (err) {
         console.error(err);
     }
+}
+
+function fixHebDate(dateHeb) {
+    dateHeb.setCity('Jerusalem');
+    console.log(dateHeb.sunset());
+    if (dateHeb.sunset() < dateNow) {
+        tempDate = new Date(dateNow);
+        tempDate.setDate(dateNow.getDate() + 1)
+        dateHeb = new Hebcal.HDate(tempDate)
+    }
+    return dateHeb
 }
