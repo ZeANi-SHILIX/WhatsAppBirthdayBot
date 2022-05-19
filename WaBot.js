@@ -201,6 +201,16 @@ client.on('message', async msg => {
         msg.reply('פונג');
     }
 
+    /*#########################
+            get time
+     ##########################*/
+     else if (msg.body.startsWith('!get-time')) {
+         d = getIsraelTime();
+         h = fixHebDate(new Hebcal.HDate(d))
+        msg.reply(`${d}\n ${h}`);
+    }
+
+
     /*#################################
      enable / disable birthday process
      ##################################*/
@@ -756,10 +766,10 @@ function write_AdminsFile(content) {
 
 function fixHebDate(dateHeb) {
     dateHeb.setCity('Jerusalem');
+    tempDate = getIsraelTime();
     console.log(dateHeb.sunset());
-    if (dateHeb.sunset() < dateNow) {
-        tempDate = getIsraelTime();
-        tempDate.setDate(dateNow.getDate() + 1)
+    if (dateHeb.sunset() < tempDate) {
+        tempDate.setDate(tempDate.getDate() + 1)
         dateHeb = new Hebcal.HDate(tempDate)
     }
     return dateHeb
