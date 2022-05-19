@@ -758,7 +758,7 @@ function fixHebDate(dateHeb) {
     dateHeb.setCity('Jerusalem');
     console.log(dateHeb.sunset());
     if (dateHeb.sunset() < dateNow) {
-        tempDate = new Date(dateNow);
+        tempDate = getIsraelTime();
         tempDate.setDate(dateNow.getDate() + 1)
         dateHeb = new Hebcal.HDate(tempDate)
     }
