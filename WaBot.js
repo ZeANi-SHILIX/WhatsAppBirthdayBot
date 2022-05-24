@@ -4,7 +4,7 @@ const fetch = require("node-fetch-commonjs");
 const Hebcal = require('hebcal');
 const fs = require('fs');
 
-const BIRTHDAY_BOT_VERSION = 1.0;
+const BIRTHDAY_BOT_VERSION = "1.1.0";
 var BOT_ADMINS = [];
 var birthdayProcesses = {};
 var birthdayList = {};
@@ -16,7 +16,8 @@ birthdayProcesses['ssid'] = {
     "GroupType": "{type}",
     "group": "{XXXXXXX@g.us}",
     "userDebug": "{XXXXXXXXXX@c.us}",
-    'checkBirthdayHour': "{10}"
+    "checkBirthdayHour": "{10}",
+    "benAishHi": false
 } */
 
 BOT_ADMINS = read_AdminsFile();
@@ -35,40 +36,68 @@ const client = new Client({
 
 });
 
-function randomSentence(personName, personAge, GroupType) {
+function randomSentence(personName, personAge, GroupType, personSex) {
     var sentencelist = {
-        "genery": [
-            `מזל טוב ${personName} לרגל הולדתו ה${personAge}!!\nעד 120 שנה`,
-            `מי הכי יפה בעיר? ${personName} הכי יפה בעיר!!\nמזל טוב ליום הולדתך ה${personAge}!!\nעד 120 שנה`,
-            `הופהההה!!! ${personName} חוגג יומולדת  ${personAge} היום!!\nמזל טובבבב!!`,
-            `למי יש יומולדת? למי יש יומולדת?\nל${personName} יש יומולדת!!\nמזל טוב להגיעך ל ${personAge}! עד 120 שנה :)`,
+        "genery": {
+            "זכר": [
+                `מזל טוב ${personName} לרגל הולדתו ה${personAge}!!\nעד 120 שנה`,
+                `מי הכי יפה בעיר? ${personName} הכי יפה בעיר!!\nמזל טוב ליום הולדתך ה${personAge}!!\nעד 120 שנה`,
+                `הופהההה!!! ${personName} חוגג יומולדת  ${personAge} היום!!\nמזל טובבבב!!`,
+                `למי יש יומולדת? למי יש יומולדת?\nל${personName} יש יומולדת!!\nמזל טוב להגיעך ל ${personAge}! עד 120 שנה :)`,
 
-        ],
-        "family": [
-            `🎼היום יום הולדת\nהיום יום הולדת\nהיום יום הולדת ל${personName}🎊🎉\nמזלללל טובבבב🥳`,
-            `מזל טוב ל${personName}!🥳🥳 ${personAge}!!\nעד 120 שנה`,
-            `כשצוחקים זה נחמד, כשמחייכים זה מיוחד!😁\nכשנותנים ברכה זה מקרב, וכשאומרים מזל טוב ליום הולדת זה מחמם את הלב!🤗\n*מזל טוב ${personName}!🥰 יומולדת ${personAge} שנה שמח!🥳*`,
-            `קולולולולו!!!🎊🎉\n *${personName} חוגג יומולדת  ${personAge} היום!!*\nהמון מזל טוב!!🥳`,
-            `מזל טוב ${personName} ליום הולדתך!🥳\n\nיבואו על ראשך ברכות וטובות\nשבתורה מובאות וכתובות\nועוד שנים נעימות ורבות\nממני - הבוט🤖`
-        ],
-        "idf": [
-            `מזל טוב ${personName} להגיעך ל${personAge}\nמחלקה 1 במיל' מצדיעה לך על שירותך המסור, אוהבים אותך ומעריכים מאוד`,
-            `🎼היום יום הולדת\nהיום יום הולדת\nהיום יום הולדת ל${personName}🎊🎉\nמזלללל טובבבב🥳\nמה תאחלו לו?`,
-            `מזל טוב ל${personName} שהזדקן בעוד שנה👻\nמאחלים לך את כל הטוב שבעולם🎊🥳`,
-            `מזל טוב ל${personName} ליום הולדתו ה-${personAge}🥳\nמאחלים לך הצלחה בכל, תמיד מאחוריך מחלקה 1!`,
-            `הכלניות אדומות\nהורדים ורודים\nלמי יש יום הולדת\nל${personName} המדהים🎉🎊\n\nמזל טוב!🥳`,
-            `הידעת?\nהיום לפני ${personAge} שנים ${personName} נולד!🎊🥳 \nמה תאחלו לו?`,
-            `אחשלנו היקר ${personName} אוהבים אותך מאוד, גם אם לא באת מהפלחוד,מאחלים לך מזל טוב ענק לרגל יום הולדתך ה${personAge}, שתהיה לך שנה מאושרת ושמחה,\nבריאות, עושר, וצמיחה.\nשאת כל משאלותיך תגשים ותזכור לא לשים על אנשים.\nתישאר כמו שאתה יא כוכב\nכל אחד מאיתנו בך מאוהב\nאוהבים מחלקה 1 במילואים!`,
-            `מזל טוב ${personName} נשמה שכמוך שתהיה לך שנה מטורפת, של הגשמה, מימוש עצמי, סיפוק, בשמחה בריאות עושר וכושר,\nתשמח תשיר ותרקוד,\nותמשיך בדרכך לצעוד,\nאוהבים מחלקה 1 במילואים!`,
-            `תחזיקו חזק כי היום המזל טוב הולך ישר ל${personName} !!! כן כן,\nלא ידעתם לא סיפרנו אבל היום ${personAge} הוא חוגג \nולעשות מסיבה אצלו בגג כל שנה הוא נוהג\nשתהיה לך שנה מלאה בטוב,\nשתדע להנות לשמוח ולאהוב \nוהכי חשוב תפסיק להיות צהוב\nאוהבים מחלקה 1 במילואים!`
-        ]
+            ],
+            "נקבה": [
+                `מזל טוב ${personName} לרגל הולדתה ה${personAge}!!\nעד 120 שנה`,
+                `מי הכי יפה בעיר? ${personName} הכי יפה בעיר!!\nמזל טוב ליום הולדתך ה${personAge}!!\nעד 120 שנה`,
+                `הופהההה!!! ${personName} חוגגת יומולדת  ${personAge} היום!!\nמזל טובבבב!!`,
+                `למי יש יומולדת? למי יש יומולדת?\nל${personName} יש יומולדת!!\nמזל טוב להגיעך ל ${personAge}! עד 120 שנה :)`,
+            ]
+        },
+        "family": {
+            "זכר": [
+                `🎼היום יום הולדת\nהיום יום הולדת\nהיום יום הולדת ל${personName}🎊🎉חג לו שמח וזר לו פורח היום יומולדת ל${personName}!\nמזלללל טובבבב🥳`,
+                `מזל טוב ל${personName}!🥳🥳\nהיום הוא בן ${personAge}!!`,
+                `כשצוחקים זה נחמד, כשמחייכים זה מיוחד!😁\nכשנותנים ברכה זה מקרב, וכשאומרים מזל טוב ליום הולדת זה מחמם את הלב!🤗\n*מזל טוב ${personName}!🥰 יומולדת ${personAge} שנה שמח!🥳*`,
+                `קולולולולו!!!🎊🎉\n *${personName} חוגג יומולדת  ${personAge} היום!!*\nהמון מזל טוב!!🥳`,
+                `מזל טוב ${personName} ליום הולדתך!🥳\n\nיבואו על ראשך ברכות וטובות\nשבתורה מובאות וכתובות\nועוד שנים נעימות ורבות\nממני - הבוט🤖`
+            ],
+            "נקבה": [
+                `🎼היום יום הולדת\nהיום יום הולדת\nהיום יום הולדת ל${personName}🎊🎉חג לה שמח וזר לה פורח היום יומולדת ל${personName}!\nמזלללל טובבבב🥳`,
+                `מזל טוב ל${personName}!🥳🥳\nהיום היא בת ${personAge}!!`,
+                `כשצוחקים זה נחמד, כשמחייכים זה מיוחד!😁\nכשנותנים ברכה זה מקרב, וכשאומרים מזל טוב ליום הולדת זה מחמם את הלב!🤗\n*מזל טוב ${personName}!🥰 יומולדת ${personAge} שנה שמח!🥳*`,
+                `קולולולולו!!!🎊🎉\n *${personName} חוגגת יומולדת  ${personAge} היום!!*\nהמון מזל טוב!!🥳`,
+                `מזל טוב ${personName} ליום הולדתך!🥳\n\nיבואו על ראשך ברכות וטובות\nשבתורה מובאות וכתובות\nועוד שנים נעימות ורבות\nממני - הבוט🤖`
+            ]
+        },
+        "idf": {
+            "זכר": [
+                `מזל טוב ${personName} להגיעך ל${personAge}\nמחלקה 1 במיל' מצדיעה לך על שירותך המסור, אוהבים אותך ומעריכים מאוד`,
+                `🎼היום יום הולדת\nהיום יום הולדת\nהיום יום הולדת ל${personName}🎊🎉\nמזלללל טובבבב🥳\nמה תאחלו לו?`,
+                `מזל טוב ל${personName} שהזדקן בעוד שנה👻\nמאחלים לך את כל הטוב שבעולם🎊🥳`,
+                `מזל טוב ל${personName} ליום הולדתו ה-${personAge}🥳\nמאחלים לך הצלחה בכל, תמיד מאחוריך מחלקה 1!`,
+                `הכלניות אדומות\nהורדים ורודים\nלמי יש יום הולדת\nל${personName} המדהים🎉🎊\n\nמזל טוב!🥳`,
+                `הידעת?\nהיום לפני ${personAge} שנים ${personName} נולד!🎊🥳 \nמה תאחלו לו?`,
+                `אחשלנו היקר ${personName} אוהבים אותך מאוד, גם אם לא באת מהפלחוד,מאחלים לך מזל טוב ענק לרגל יום הולדתך ה${personAge}, שתהיה לך שנה מאושרת ושמחה,\nבריאות, עושר, וצמיחה.\nשאת כל משאלותיך תגשים ותזכור לא לשים על אנשים.\nתישאר כמו שאתה יא כוכב\nכל אחד מאיתנו בך מאוהב\nאוהבים מחלקה 1 במילואים!`,
+                `מזל טוב ${personName} נשמה שכמוך שתהיה לך שנה מטורפת, של הגשמה, מימוש עצמי, סיפוק, בשמחה בריאות עושר וכושר,\nתשמח תשיר ותרקוד,\nותמשיך בדרכך לצעוד,\nאוהבים מחלקה 1 במילואים!`,
+                `תחזיקו חזק כי היום המזל טוב הולך ישר ל${personName} !!! כן כן,\nלא ידעתם לא סיפרנו אבל היום ${personAge} הוא חוגג \nולעשות מסיבה אצלו בגג כל שנה הוא נוהג\nשתהיה לך שנה מלאה בטוב,\nשתדע להנות לשמוח ולאהוב \nוהכי חשוב תפסיק להיות צהוב\nאוהבים מחלקה 1 במילואים!`
+            ],
+            "נקבה": [
+                `מזל טוב ${personName} להגיעך ל${personAge}\nמחלקה 1 במיל' מצדיעה לך על שירותך המסור, אוהבים אותך ומעריכים מאוד`,
+            ]
+        }
     }
     try {
-        var randomInt = Math.floor(Math.random() * sentencelist[GroupType].length);
-        return sentencelist[GroupType][randomInt];
+        var randomInt = Math.floor(Math.random() * sentencelist[GroupType.toLowerCase()][personSex].length);
+        return sentencelist[GroupType.toLowerCase()][personSex][randomInt];
     } catch (error) {
-        console.log("GroupType not vaild " + error)
-        var randomInt = Math.floor(Math.random() * sentencelist.genery.length);
+        console.log(error)
+
+        if (personSex === "זכר" || personSex === "נקבה") {
+            var randomInt = Math.floor(Math.random() * sentencelist.genery[personSex].length);
+            return sentencelist.genery[randomInt];
+        }
+
+        var randomInt = Math.floor(Math.random() * sentencelist.genery["זכר"].length);
         return sentencelist.genery[randomInt];
     }
 
@@ -96,7 +125,7 @@ function birthday_massege(ssid) {
 
             // ### => move manualy to next day after sunset (module not working)
             dateHeb = fixHebDate(dateHeb);
-            
+
             console.log(`${dateNow}\nHebTime: ${dateHeb}\n-----`);
 
 
@@ -110,9 +139,14 @@ function birthday_massege(ssid) {
                         `ל${person.name} יש בעיה בתאריך העברי (חוגג יומולדת עברי)`);
                 }
 
+                if (!person.currectEnDate && person.datePrefer == 'לועזי') {
+                    client.sendMessage(birthdayProcesses[ssid].userDebug,
+                        `ל${person.name} יש בעיה בתאריך הלועזי (חוגג יומולדת לועזי)`);
+                }
+
                 age = comperDate(dateNow, person.LoaziDate, dateHeb, person.HebDate, person.datePrefer)
                 if (age > 0) {
-                    birthdayList[ssid].push({ "name": person.name, "age": age })
+                    birthdayList[ssid].push({ "name": person.name, "age": age, "sex": person.sex, "phone": person.phone })
                 }
             });
         })
@@ -122,7 +156,36 @@ function birthday_massege(ssid) {
 
             } else {
                 birthdayList[ssid].forEach(person => {
-                    client.sendMessage(birthdayProcesses[ssid].group, randomSentence(person.name, person.age, birthdayProcesses[ssid].GroupType));
+                    timeDiffrence = dateHeb.getZemanim().tzeit - dateNow
+
+                    // if Shabat - send after Shabat
+                    if (dateHeb.getDay() !== 6) { //not shabat
+                        client.sendMessage(birthdayProcesses[ssid].group, randomSentence(person.name, person.age, birthdayProcesses[ssid].GroupType, person.sex));
+                    } else {
+                        sendAfterShabat(timeDiffrence, birthdayProcesses[ssid].group, person.name, person.age, birthdayProcesses[ssid].GroupType, person.sex)
+                    }
+
+                    //send benAishHi_beracha
+                    if ("benAishHi" in birthdayProcesses[ssid]) {
+                        if (birthdayProcesses[ssid].benAishHi &&
+                            person.sex === "זכר" &&
+                            person.phone !== "") {
+
+                            var brit_date = new Date(dateHeb.greg().valueOf());
+                            brit_date.setDate(date.getDate() + 8);
+
+                            //no massege in shabat
+                            var sendTime = 8 * 24 * 60 * 60 * 1000;
+                            if (dateHeb.getDay() === 5) {
+                                sendTime = 7 * 24 * 60 * 60 * 1000;
+                            }
+                            benAishHi_beracha(sendTime, person.phone, brit_date)
+                        }
+                    } else {
+                        birthdayProcesses[ssid].benAishHi = false;
+                        write_BirthdayProcesses()
+                    }
+
                 })
             }
             birthdayList[ssid] = []; // reset list
@@ -139,15 +202,11 @@ async function check_birthday(ssid) {
             client.sendMessage(birthdayProcesses[ssid].userDebug, `השעה: ${todayHour}, --> בודק ימי הולדת ב${birthdayProcesses[ssid].name}...`);
             birthday_massege(ssid)
         }
-        /*else {
-            console.log(`--------\nTime: ${todayHour}`)
-            client.sendMessage(birthdayProcesses[ssid].userDebug, `השעה: ${todayHour}, אני חי! :)`);
-        }*/
 
         /*  1000*60         is a minute 
             1000*60*60      is a hour
             1000*60*60*24   is a day     */
-        await sleep(1000 * 60 * 60); // 
+        await sleep(1000 * 60 * 60);
 
         if (birthdayProcesses[ssid] == undefined) {
             break;
@@ -204,12 +263,11 @@ client.on('message', async msg => {
     /*#########################
             get time
      ##########################*/
-     else if (msg.body.startsWith('!get-time')) {
-         d = getIsraelTime();
-         h = fixHebDate(new Hebcal.HDate(d))
-        msg.reply(`${d}\n ${h}`);
+    else if (msg.body.startsWith('!get-time')) {
+        d = getIsraelTime();
+        h = fixHebDate(new Hebcal.HDate(d))
+        msg.reply(`${d.getHours()}:${d.getMinutes()}\n${h.getDate()} ${h.getMonthName("h")}\n${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`);
     }
-
 
     /*#################################
      enable / disable birthday process
@@ -223,7 +281,7 @@ client.on('message', async msg => {
 
         if (BOT_ADMINS.includes(author)) {
             birthdayProcesses = {};
-            write_BirthdayProcesses(birthdayProcesses);
+            write_BirthdayProcesses();
             msg.reply('All the Birthday process turned off');
         } else {
             msg.reply("You don't have the premision for that");
@@ -246,7 +304,7 @@ client.on('message', async msg => {
                 if (value.name == words[1]) {
                     if (BOT_ADMINS.includes(author) || author == value.userDebug) {
                         delete birthdayProcesses[key]
-                        write_BirthdayProcesses(birthdayProcesses);
+                        write_BirthdayProcesses();
                         msg.reply(`Birthday process ${value.name} has disable`);
                     } else {
                         msg.reply("You don't have the permission for that");
@@ -318,12 +376,12 @@ client.on('message', async msg => {
                                 var json = JSON.parse(data.substr(47).slice(0, -2));
 
                                 birthdayProcesses[ssid] = str_obj[ssid];
-                                write_BirthdayProcesses(birthdayProcesses);
+                                write_BirthdayProcesses();
 
                                 // start the process
                                 msg.reply('Starting ' + str_obj[ssid].name + " processe");
                                 check_birthday(ssid);
-                                
+
                             } catch (e) {
                                 msg.reply('Not valid input: wrong ssid\n' + url2)
                                 console.log(e)
@@ -375,14 +433,15 @@ client.on('message', async msg => {
                                 "GroupType": GroupType,
                                 "group": msg.from,
                                 "userDebug": author,
-                                "checkBirthdayHour": 10
+                                "checkBirthdayHour": 10,
+                                "benAishHi": false
                             }
-                            write_BirthdayProcesses(birthdayProcesses);
+                            write_BirthdayProcesses();
 
                             // start the process
                             msg.reply('Starting ' + words[2]);
                             check_birthday(words[1]);
-                            
+
                         } else {
                             msg.reply(`This table used in ${birthdayProcesses[words[1]].name} processe`);
                         }
@@ -440,7 +499,7 @@ client.on('message', async msg => {
                 if (value.name == words[1]) {
                     if (BOT_ADMINS.includes(author) || author == value.userDebug) {
                         birthdayProcesses[key].checkBirthdayHour = customHour
-                        write_BirthdayProcesses(birthdayProcesses);
+                        write_BirthdayProcesses();
                         msg.reply(`Birthday process ${value.name} hour has changed to ${customHour}`);
                     } else {
                         msg.reply("You don't have the permission for that");
@@ -541,7 +600,7 @@ function addAdmin(id, msg) {
         console.log(id + " Already Admin")
         msg.reply(id + " Already Admin");
     }
-    write_AdminsFile(BOT_ADMINS)
+    write_AdminsFile()
 }
 
 function removeAdmin(id, msg) {
@@ -553,7 +612,7 @@ function removeAdmin(id, msg) {
         console.log(id + " Isn't Admin")
         msg.reply(id + " Isn't Admin");
     }
-    write_AdminsFile(BOT_ADMINS)
+    write_AdminsFile()
 }
 
 function removeItemOnce(arr, value) {
@@ -566,6 +625,42 @@ function removeItemOnce(arr, value) {
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// wait {timeout} before sending
+function sendAfterShabat(timeout, groupID, name, age, GroupType, sex) {
+    setTimeout(function () {
+        client.sendMessage(groupID, randomSentence(name, age, GroupType, sex));
+    }, timeout)
+}
+
+// shorturl.at/htLY5
+// TODO: date in english - change to hebrew
+function benAishHi_beracha(timeout, phoneNum, date_brit) {
+    setTimeout(function () {
+        let beracha =
+            `רבונו של עולם גלוי וידוע לפניך כי בהיום הזה שהוא יום ${date_brit.getDate()} לחודש ${date_brit.getMonthName("h")} שהוא היה יום שמיני ללידתי,
+         נכנסתי בבריתו של אברהם אבינו עליו השלום בשנה הראשונה שנולדתי בה, 
+         וקיים בי עבדך אבי מצות מילה ופריעה כאשר צוית אותנו בתורתך הקדושה ונתגלה הכלי השלישי של היסוד האמיתי נקרא קודש קודשים ויצא אורו, 
+         ונתבטלה אחיזת החיצונים ונתחברו שמונה ושבעים אורות החסדים, 
+         עם שמונה ושבעים אורות הגבורות ונתמתקו אורות הגבורות באורות החסדים: 
+         אנא ה' למען שמך הגדול ולמען רחמיך וחסדיך תעזריני ותסייעני לשמור אות ברית קודש אשר חתמת בבשרנו, 
+         ותצילני מכל חטא ומכל הרהורים רעים ומחשבות פגומות ותצילני מכל פגם הברית 
+         הן במחשבה הן בדבור הן במעשה הן בחוש הריאות הן בחוש השמיעה הן בשאר חושים ובכולם אהיה טהור בקדושת הברית בלי שום פגם והרהור רע כלל, 
+         ותזכני שאתגבר על יצר הרע, ותהיה מחשבתי קשורה ודבוקה בקדושת תמיד, 
+         כי ברחמיך הרבים בחרת בנו מכל האומות ורוממתנו מכל הלשונות, 
+         והבדלת אותנו מכל טומאותיהם ותועבותיהם, ככתוב בתורתך (ויקרא י, כו) ואבדיל אתכם מן העמים להיות לי, 
+         נודה לך ה' אלהינו ואלהי אבותינו על שהוצאתנו מארץ מצרים, ופדיתנו מבית עבדים ועל בריתך שחתמת בבשרינו, 
+         ועל תורתך שלמדתנו, ועל חוקי רצונך שהודעתנו, ועל חיים ומזון שאתה זן ומפרנס אותנו, 
+         אנא ה' לב טהור ברא לי אלהים ורוח נכון חדש בקרבי, 
+         ותמשוך עלי מחשבו קדושות וטהורות זכות ונכונות, ויהיה לי לב שמח בעבודתך תמיד, ותעזרני על דבר כבוד שמך מעתה ועד עולם אמן כן יהי רצון`
+
+         try {
+             client.sendMessage(phoneNum + "@c.us", beracha);
+         } catch (error) {
+             console.log(error)
+         }
+    }, timeout)
 }
 
 function convertToNumber(str) {
@@ -607,42 +702,65 @@ function readRowsFromGoogleSheet(element) {
     f - format
     */
 
-    var PersonName = "Error"
-    var datePrefer = ""
-    var birthdayLoazi = ""
-    var got_error = false
+    var PersonName = "Error";
+    var datePrefer = "";
+    var got_error = false;
+
     try {
         PersonName = element.c[1].v;
         datePrefer = element.c[2].v;
-        birthdayLoazi = element.c[3].f;
     } catch (error) {
-        //console.log(error)
-        got_error = true
+        got_error = true;
     }
 
-    var currectHebDate = true
-    var day_he = "", month_he = "", year_he = "", phoneNum = "", emailAdress = ""
+    // loazi date
+    var birthdayLoazi = "";
+    var currectEnDate = true;
+    try {
+        birthdayLoazi = element.c[3].f;
+    } catch (error) {
+        currectEnDate = false;
+        got_error = true;
+    }
+
+    // hebrew date
+    var currectHebDate = true;
+    var day_he = "", month_he = "", year_he = "";
     try {
         day_he = element.c[4].v.trim();
         month_he = element.c[5].v;
         year_he = element.c[6].v.trim();
     } catch (error) {
-        //console.log(error)
         currectHebDate = false
         got_error = true
     }
+
+    // phone
+    var phoneNum = "";
     try {
         phoneNum = element.c[7].v;
     } catch (error) {
-        //console.log(error)
-        got_error = true
+        console.log(PersonName + "didn't enter phone number")
+        //got_error = true
     }
+
+    // email
+    var emailAdress = "";
     try {
         emailAdress = element.c[8].v;
     } catch (error) {
-        //console.log(error)
-        got_error = true
+        //got_error = true
     }
+
+    // sex of person
+    var personSex = "זכר";
+    try {
+        personSex = element.c[9].v;
+    } catch (error) {
+        got_error = true;
+    }
+
+    // if error - print the object
     if (got_error) { console.log(element.c) }
 
 
@@ -660,7 +778,7 @@ function readRowsFromGoogleSheet(element) {
     } else if (birthdayLoazi.includes("-")) {
         var birthday_array = birthdayLoazi.split("-");
     } else {
-        console.log('Unknown date format: ' + birthdayLoazi)
+        console.log(PersonName + ' has unknown Loazi date format: ' + birthdayLoazi)
         var birthday_array = ["", "", ""];
     }
     birthdayLoazi = new Date(
@@ -671,7 +789,6 @@ function readRowsFromGoogleSheet(element) {
     //console.log(`${PersonName}\n${datePrefer}\n${birthdayLoazi}\n${birthdayHeb}\n--------`)
     // + "\n" + day_he + " " + month_he + " " + year_he + "\n" +phoneNum + "\n" + emailAdress
 
-
     return {
         "name": PersonName,
         "datePrefer": datePrefer,
@@ -679,7 +796,9 @@ function readRowsFromGoogleSheet(element) {
         "HebDate": birthdayHeb,
         "phone": phoneNum,
         "email": emailAdress,
-        "currectHebDate": currectHebDate
+        "sex": personSex,
+        "currectHebDate": currectHebDate,
+        "currectEnDate": currectEnDate
     }
 }
 
@@ -713,6 +832,7 @@ function noDoubleWhitespace(str) {
     return true;
 }
 
+// fix server time
 function getIsraelTime() {
     var d = new Date();
     return new Date(new Date(d).setHours(d.getUTCHours() + ADD_HOUR_TO_UTC));
@@ -742,23 +862,23 @@ function read_BirthdayProcesses() {
     return {};
 }
 
-function write_BirthdayProcesses(content) {
+function write_BirthdayProcesses() {
     try {
         if (!fs.existsSync('saved_files')) {
             fs.mkdirSync('saved_files');
         }
-        fs.writeFileSync('saved_files/birthdayProcesses.json', JSON.stringify(content));
+        fs.writeFileSync('saved_files/birthdayProcesses.json', JSON.stringify(birthdayProcesses));
     } catch (err) {
         console.error(err);
     }
 }
 
-function write_AdminsFile(content) {
+function write_AdminsFile() {
     try {
         if (!fs.existsSync('saved_files')) {
             fs.mkdirSync('saved_files');
         }
-        fs.writeFileSync('saved_files/admins.json', JSON.stringify(content));
+        fs.writeFileSync('saved_files/admins.json', JSON.stringify(BOT_ADMINS));
     } catch (err) {
         console.error(err);
     }
@@ -767,10 +887,11 @@ function write_AdminsFile(content) {
 function fixHebDate(dateHeb) {
     dateHeb.setCity('Jerusalem');
     tempDate = getIsraelTime();
-    console.log(dateHeb.sunset());
-    if (dateHeb.sunset() < tempDate) {
+    console.log("tzeit (zmanim): " + dateHeb.getZemanim().tzeit);
+    if (dateHeb.getZemanim().tzeit < tempDate) {
         tempDate.setDate(tempDate.getDate() + 1)
-        dateHeb = new Hebcal.HDate(tempDate)
     }
-    return dateHeb
+    newdateHeb = new Hebcal.HDate(tempDate);
+    newdateHeb.setCity('Jerusalem');
+    return newdateHeb;
 }
