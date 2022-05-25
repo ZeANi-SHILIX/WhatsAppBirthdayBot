@@ -195,18 +195,26 @@ function birthday_massege(ssid) {
 async function check_birthday(ssid) {
     client.sendMessage(birthdayProcesses[ssid].userDebug, `כעת העדכונים של הבוט עבור ${birthdayProcesses[ssid].name}, ישלחו כאן`);
 
+    var startAtZeroMinute_Flag = false;
+
     while (true) {
-        var todayHour = getIsraelTime().getHours();
+        var israelTime = getIsraelTime();
+        var todayHour = israelTime.getHours();
         if (todayHour == birthdayProcesses[ssid].checkBirthdayHour) {
             console.log(`--------\nTime: ${todayHour}, --> Start to check birthdays at ${birthdayProcesses[ssid].name}...`)
             client.sendMessage(birthdayProcesses[ssid].userDebug, `השעה: ${todayHour}, --> בודק ימי הולדת ב${birthdayProcesses[ssid].name}...`);
             birthday_massege(ssid)
         }
 
-        /*  1000*60         is a minute 
-            1000*60*60      is a hour
-            1000*60*60*24   is a day     */
-        await sleep(1000 * 60 * 60);
+        if (startAtZeroMinute_Flag) {
+            await sleep(1000 * 60 * 60);
+        } else {
+            if (israelTime.getMinutes() != 0) {
+                let waitMin = 60 - israelTime.getMinutes();
+                await sleep(1000 * 60 * (waitMin));
+            }
+            startAtZeroMinute_Flag = true;
+        }
 
         if (birthdayProcesses[ssid] == undefined) {
             break;
@@ -623,6 +631,9 @@ function removeItemOnce(arr, value) {
     return arr;
 }
 
+/*  1000*60         is a minute 
+    1000*60*60      is a hour
+    1000*60*60*24   is a day     */
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -655,11 +666,11 @@ function benAishHi_beracha(timeout, phoneNum, date_brit) {
          אנא ה' לב טהור ברא לי אלהים ורוח נכון חדש בקרבי, 
          ותמשוך עלי מחשבו קדושות וטהורות זכות ונכונות, ויהיה לי לב שמח בעבודתך תמיד, ותעזרני על דבר כבוד שמך מעתה ועד עולם אמן כן יהי רצון`
 
-         try {
-             client.sendMessage(phoneNum + "@c.us", beracha);
-         } catch (error) {
-             console.log(error)
-         }
+        try {
+            client.sendMessage(phoneNum + "@c.us", beracha);
+        } catch (error) {
+            console.log(error)
+        }
     }, timeout)
 }
 
