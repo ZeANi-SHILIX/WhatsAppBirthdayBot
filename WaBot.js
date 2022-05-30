@@ -4,7 +4,7 @@ const fetch = require("node-fetch-commonjs");
 const Hebcal = require('hebcal');
 const fs = require('fs');
 
-const BIRTHDAY_BOT_VERSION = "1.1.0";
+const BIRTHDAY_BOT_VERSION = "1.1.5";
 var BOT_ADMINS = [];
 var birthdayProcesses = {};
 var birthdayList = {};
@@ -272,9 +272,16 @@ client.on('message', async msg => {
             get time
      ##########################*/
     else if (msg.body.startsWith('!get-time')) {
-        d = getIsraelTime();
-        h = fixHebDate(new Hebcal.HDate(d))
-        msg.reply(`${d.getHours()}:${d.getMinutes()}\n${h.getDate()} ${h.getMonthName("h")}\n${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`);
+        let d = getIsraelTime();
+        let h = fixHebDate(new Hebcal.HDate(d));
+        let minute = d.getMinutes();
+        if (minute >= 0 && minute < 10){
+            minute = "0"+minute;
+        }
+        let timeOclock = `${d.getHours()}:${minute}`;
+        let HebDate = `${h.getDate()} ${h.getMonthName("h")}`;
+        let LoaziDate = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+        msg.reply(`${timeOclock}\n${HebDate}\n${LoaziDate}`);
     }
 
     /*#################################
@@ -518,7 +525,7 @@ client.on('message', async msg => {
         }
     }
     else if (msg.body === '!birthday-help') {
-        msg.reply("Visit https://github.com/ZeANi-SHILIX/WhatsAppBirthdayBot");
+        msg.reply("Visit my GitHub for help:\nhttps://github.com/ZeANi-SHILIX/WhatsAppBirthdayBot");
     }
     else if (msg.body === '!info') {
         msg.reply("*This bot developed by Shilo Babila*\nVersion: " + BIRTHDAY_BOT_VERSION);
@@ -814,6 +821,10 @@ function readRowsFromGoogleSheet(element) {
 }
 
 function comperDate(dateNow, birthdayLoazi, dateHeb, birthdayHeb, datePrefer) {
+    // if there no 30th in the hebrew month, but the person born in this day
+    // his birthday will be at 1st in next month.
+    birthdayHeb = BornInDisappearDay(birthdayHeb, dateHeb);
+
     if (datePrefer == 'עברי') {
         if (dateHeb.month == birthdayHeb.month && dateHeb.day == birthdayHeb.day) {
             return dateHeb.year - birthdayHeb.year;
@@ -827,8 +838,22 @@ function comperDate(dateNow, birthdayLoazi, dateHeb, birthdayHeb, datePrefer) {
     return 0;
 }
 
-// if founded two - return false, if not (no double) return true
+function BornInDisappearDay(birthdayHeb, dateHeb){
+    if (dateHeb.day === 30 && (dateHeb.month === 8 || dateHeb.month === 9)){
+        return birthdayHeb;
+    }
+
+    // only 8, 9 (nissan is 1)
+    // https://he.wikipedia.org/wiki/%D7%94%D7%9C%D7%95%D7%97_%D7%94%D7%A2%D7%91%D7%A8%D7%99#%D7%94%D7%97%D7%95%D7%93%D7%A9
+    if ((birthdayHeb.month === 8 || birthdayHeb.month === 9) && birthdayHeb.day === 30){
+        return birthdayHeb.next();
+    } else {
+        return birthdayHeb;
+    }
+}
+
 function noDoubleWhitespace(str) {
+    // if founded two - return false, if not (no double) return true
     var oneWhiteSpcae = false;
     for (let index = 0; index < str.length; index++) {
         if (str[index] == " ") {
