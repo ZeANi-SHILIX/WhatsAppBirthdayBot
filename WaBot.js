@@ -1,4 +1,5 @@
 const { Client, Location, List, Buttons, LocalAuth } = require('whatsapp-web.js');
+const TelegramBot = require('node-telegram-bot-api');
 const qrcode = require('qrcode-terminal');
 const fetch = require("node-fetch-commonjs");
 const Hebcal = require('hebcal');
@@ -9,6 +10,11 @@ var BOT_ADMINS = [];
 var birthdayProcesses = {};
 var birthdayList = {};
 var ADD_HOUR_TO_UTC = 3;
+
+// server is linux, the testing on windows
+const RUN_ON_SERVER = process.platform !== 'win32';
+const token = '5451970176:AAGy282-OCf7VS6sPkn-QSXciEMxjAjI2_M';
+const telegram_bot = new TelegramBot(token, { polling: true });
 
 /* start process when the bot start
 birthdayProcesses['ssid'] = {
@@ -240,6 +246,9 @@ client.on('auth_failure', msg => {
 
 client.on('ready', () => {
     console.log('READY');
+    if (RUN_ON_SERVER){
+        telegram_bot.sendMessage('322504464', 'BirthdayBot is connected')
+    }
 
     for (ssid in birthdayProcesses) {
         check_birthday(ssid)
