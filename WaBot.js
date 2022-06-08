@@ -3,9 +3,10 @@ const TelegramBot = require('node-telegram-bot-api');
 const qrcode = require('qrcode-terminal');
 const fetch = require("node-fetch-commonjs");
 const Hebcal = require('hebcal');
+const QRCode = require('qrcode');
 const fs = require('fs');
 
-const BIRTHDAY_BOT_VERSION = "1.1.5";
+const BIRTHDAY_BOT_VERSION = "1.2.0";
 var BOT_ADMINS = [];
 var birthdayProcesses = {};
 var birthdayList = {};
@@ -13,8 +14,9 @@ var ADD_HOUR_TO_UTC = 3;
 
 // server is linux, the testing on windows
 const RUN_ON_SERVER = process.platform !== 'win32';
-const token = '5451970176:AAGy282-OCf7VS6sPkn-QSXciEMxjAjI2_M';
+const token = '{YOUR TOKEN}';
 const telegram_bot = new TelegramBot(token, { polling: true });
+const telegramUserDebug = '{YOUR ID}';
 
 /* start process when the bot start
 birthdayProcesses['ssid'] = {
@@ -157,15 +159,34 @@ function birthday_massege(ssid) {
             });
         })
         .then(() => {
-            console.log("birthdayList contain " + birthdayList[ssid].length + " objects")
-            if (birthdayList[ssid].length == 0) {
+            console.log("birthdayList contain " + birthdayList[ssid].length + " objects");
 
-            } else {
+            let tomorrow = getIsraelTime();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+
+            let dayInWeek = date.getDay(); // sunday is 0
+            let dayInWeek_tomorow = tomorrow.getDay();
+
+            let HebDate_tomorow = new Hebcal.HDate(tomorrow);
+
+            is_Holi_Today = dayInWeek === 6 || checkIsYomTov(HebDate);
+            is_Holi_tomorow = dayInWeek_tomorow === 6 || checkIsYomTov(HebDate_tomorow);
+
+            let timeDiffrence = 0;
+            if (is_Holi_Today && is_Holi_tomorow){
+                timeDiffrence = dateHeb.getZemanim().tzeit - dateNow + 24 * 60 * 60 * 1000
+            } else if (is_Holi_Today){
+                timeDiffrence = dateHeb.getZemanim().tzeit - dateNow
+            }
+
+
+
+            if (birthdayList[ssid].length !== 0) {
+
                 birthdayList[ssid].forEach(person => {
-                    timeDiffrence = dateHeb.getZemanim().tzeit - dateNow
 
-                    // if Shabat - send after Shabat
-                    if (dateHeb.getDay() !== 6) { //not shabat
+                    // if Shabat or Holiday - send after that
+                    if (timeDiffrence !== 0) { 
                         client.sendMessage(birthdayProcesses[ssid].group, randomSentence(person.name, person.age, birthdayProcesses[ssid].GroupType, person.sex));
                     } else {
                         sendAfterShabat(timeDiffrence, birthdayProcesses[ssid].group, person.name, person.age, birthdayProcesses[ssid].GroupType, person.sex)
@@ -204,6 +225,8 @@ async function check_birthday(ssid) {
     var startAtZeroMinute_Flag = false;
 
     while (true) {
+        var t0 = performance.now();
+
         var israelTime = getIsraelTime();
         var todayHour = israelTime.getHours();
         if (todayHour == birthdayProcesses[ssid].checkBirthdayHour) {
@@ -213,11 +236,13 @@ async function check_birthday(ssid) {
         }
 
         if (startAtZeroMinute_Flag) {
-            await sleep(1000 * 60 * 60);
+            var t1 = performance.now();
+            await sleep(1000 * 60 * 60 - (t1 - t0));
         } else {
             if (israelTime.getMinutes() != 0) {
                 let waitMin = 60 - israelTime.getMinutes();
-                await sleep(1000 * 60 * (waitMin));
+                var t1 = performance.now();
+                await sleep(1000 * 60 * (waitMin) - (t1 - t0));
             }
             startAtZeroMinute_Flag = true;
         }
@@ -230,13 +255,11 @@ async function check_birthday(ssid) {
 
 client.initialize();
 
-client.on('qr', (qr) => {
+client.on('qr', async qr => {
     qrcode.generate(qr, { small: true });
     console.log('QR RECEIVED', qr);
-});
-
-client.on('authenticated', () => {
-    console.log('AUTHENTICATED');
+    await QRCode.toFile('./qr_code.png', qr);
+    telegram_bot.sendPhoto(telegramUserDebug, './qr_code.png')
 });
 
 client.on('auth_failure', msg => {
@@ -246,8 +269,8 @@ client.on('auth_failure', msg => {
 
 client.on('ready', () => {
     console.log('READY');
-    if (RUN_ON_SERVER){
-        telegram_bot.sendMessage('322504464', 'BirthdayBot is connected')
+    if (RUN_ON_SERVER) {
+        telegram_bot.sendMessage(telegramUserDebug, 'BirthdayBot is connected')
     }
 
     for (ssid in birthdayProcesses) {
@@ -284,8 +307,8 @@ client.on('message', async msg => {
         let d = getIsraelTime();
         let h = fixHebDate(new Hebcal.HDate(d));
         let minute = d.getMinutes();
-        if (minute >= 0 && minute < 10){
-            minute = "0"+minute;
+        if (minute >= 0 && minute < 10) {
+            minute = "0" + minute;
         }
         let timeOclock = `${d.getHours()}:${minute}`;
         let HebDate = `${h.getDate()} ${h.getMonthName("h")}`;
@@ -723,11 +746,9 @@ function asciiConvertor(char) {
 }
 
 function readRowsFromGoogleSheet(element) {
-    /*
-    c - cell
-    v - value
-    f - format
-    */
+    /*  c - cell
+        v - value
+        f - format  */
 
     var PersonName = "Error";
     var datePrefer = "";
@@ -847,14 +868,14 @@ function comperDate(dateNow, birthdayLoazi, dateHeb, birthdayHeb, datePrefer) {
     return 0;
 }
 
-function BornInDisappearDay(birthdayHeb, dateHeb){
-    if (dateHeb.day === 30 && (dateHeb.month === 8 || dateHeb.month === 9)){
+function BornInDisappearDay(birthdayHeb, dateHeb) {
+    if (dateHeb.day === 30 && (dateHeb.month === 8 || dateHeb.month === 9)) {
         return birthdayHeb;
     }
 
     // only 8, 9 (nissan is 1)
     // https://he.wikipedia.org/wiki/%D7%94%D7%9C%D7%95%D7%97_%D7%94%D7%A2%D7%91%D7%A8%D7%99#%D7%94%D7%97%D7%95%D7%93%D7%A9
-    if ((birthdayHeb.month === 8 || birthdayHeb.month === 9) && birthdayHeb.day === 30){
+    if ((birthdayHeb.month === 8 || birthdayHeb.month === 9) && birthdayHeb.day === 30) {
         return birthdayHeb.next();
     } else {
         return birthdayHeb;
@@ -939,4 +960,24 @@ function fixHebDate(dateHeb) {
     newdateHeb = new Hebcal.HDate(tempDate);
     newdateHeb.setCity('Jerusalem');
     return newdateHeb;
+}
+
+function checkIsYomTov(hebdate) {
+    //hebdate is Hebcal obj
+    let M = hebdate.month
+    let D = hebdate.day
+
+    if (M === 7) {
+        if (D === 1 || D === 2 || D === 10 || D === 15 || D === 22)
+            return true;
+    }
+    if (M === 1) {
+        if (D === 15 || D === 21)
+            return true;
+    }
+    if (M === 3) {
+        if (D === 6)
+            return true;
+    }
+    return false;
 }
