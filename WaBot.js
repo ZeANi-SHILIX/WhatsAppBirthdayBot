@@ -1,4 +1,4 @@
-const { Client, Location, List, Buttons, LocalAuth } = require('whatsapp-web.js');
+const { Client, Buttons, LocalAuth } = require('whatsapp-web.js');
 const TelegramBot = require('node-telegram-bot-api');
 const qrcode = require('qrcode-terminal');
 const fetch = require("node-fetch-commonjs");
@@ -6,7 +6,7 @@ const Hebcal = require('hebcal');
 const QRCode = require('qrcode');
 const fs = require('fs');
 
-const BIRTHDAY_BOT_VERSION = "1.2.0";
+const BIRTHDAY_BOT_VERSION = "1.2.1";
 var BOT_ADMINS = [];
 var birthdayProcesses = {};
 var birthdayList = {};
@@ -123,8 +123,8 @@ function birthday_massege(ssid) {
             var json = JSON.parse(data.substr(47).slice(0, -2));
             rows = json.table.rows;
 
-            dateNow = getIsraelTime();
-            dateHeb = new Hebcal.HDate(dateNow);
+            var dateNow = getIsraelTime();
+            var dateHeb = new Hebcal.HDate(dateNow);
 
             // For testing - custom date
             //dateHeb = new Hebcal.HDate(9, "Sh'vat", 5790)
@@ -161,21 +161,23 @@ function birthday_massege(ssid) {
         .then(() => {
             console.log("birthdayList contain " + birthdayList[ssid].length + " objects");
 
+            let dateNow = getIsraelTime();
             let tomorrow = getIsraelTime();
             tomorrow.setDate(tomorrow.getDate() + 1);
 
-            let dayInWeek = date.getDay(); // sunday is 0
+            let dayInWeek = dateNow.getDay(); // sunday is 0
             let dayInWeek_tomorow = tomorrow.getDay();
+            
+            let dateHeb = new Hebcal.HDate(dateNow);
+            let dateHeb_tomorow = new Hebcal.HDate(tomorrow);
 
-            let HebDate_tomorow = new Hebcal.HDate(tomorrow);
-
-            is_Holi_Today = dayInWeek === 6 || checkIsYomTov(HebDate);
-            is_Holi_tomorow = dayInWeek_tomorow === 6 || checkIsYomTov(HebDate_tomorow);
+            let is_Holi_Today = dayInWeek === 6 || checkIsYomTov(dateHeb);
+            let is_Holi_tomorow = dayInWeek_tomorow === 6 || checkIsYomTov(dateHeb_tomorow);
 
             let timeDiffrence = 0;
-            if (is_Holi_Today && is_Holi_tomorow){
+            if (is_Holi_Today && is_Holi_tomorow) {
                 timeDiffrence = dateHeb.getZemanim().tzeit - dateNow + 24 * 60 * 60 * 1000
-            } else if (is_Holi_Today){
+            } else if (is_Holi_Today) {
                 timeDiffrence = dateHeb.getZemanim().tzeit - dateNow
             }
 
@@ -186,7 +188,7 @@ function birthday_massege(ssid) {
                 birthdayList[ssid].forEach(person => {
 
                     // if Shabat or Holiday - send after that
-                    if (timeDiffrence !== 0) { 
+                    if (timeDiffrence !== 0) {
                         client.sendMessage(birthdayProcesses[ssid].group, randomSentence(person.name, person.age, birthdayProcesses[ssid].GroupType, person.sex));
                     } else {
                         sendAfterShabat(timeDiffrence, birthdayProcesses[ssid].group, person.name, person.age, birthdayProcesses[ssid].GroupType, person.sex)
@@ -199,7 +201,7 @@ function birthday_massege(ssid) {
                             person.phone !== "") {
 
                             var brit_date = new Date(dateHeb.greg().valueOf());
-                            brit_date.setDate(date.getDate() + 8);
+                            brit_date.setDate(dateNow.getDate() + 8);
 
                             //no massege in shabat
                             var sendTime = 8 * 24 * 60 * 60 * 1000;
@@ -854,9 +856,27 @@ function comperDate(dateNow, birthdayLoazi, dateHeb, birthdayHeb, datePrefer) {
     // if there no 30th in the hebrew month, but the person born in this day
     // his birthday will be at 1st in next month.
     birthdayHeb = BornInDisappearDay(birthdayHeb, dateHeb);
+    // have 2 months of Adar
+    birthday_leap = birthdayHeb.isLeapYear();
+    date_leap = dateHeb.isLeapYear();
 
     if (datePrefer == 'עברי') {
-        if (dateHeb.month == birthdayHeb.month && dateHeb.day == birthdayHeb.day) {
+        // only current year is leap
+        // who burn in Adar (the month 12), celebrate in Adar 2 (the month 13) 
+        if (date_leap && birthdayHeb.month == 12) {
+            if (dateHeb.month == 13 && dateHeb.day == birthdayHeb.day) {
+                return dateHeb.year - birthdayHeb.year;
+            }
+        }
+        // only birthday year is leap
+        // who burn in Adar 2 (the month 13), celebrate in Adar (the month 12)
+        else if (birthday_leap && birthdayHeb.month == 13) {
+            if (dateHeb.month == 12 && dateHeb.day == birthdayHeb.day) {
+                return dateHeb.year - birthdayHeb.year;
+            }
+        }
+        // 
+        else if (dateHeb.month == birthdayHeb.month && dateHeb.day == birthdayHeb.day) {
             return dateHeb.year - birthdayHeb.year;
         }
     }
@@ -900,8 +920,12 @@ function noDoubleWhitespace(str) {
 
 // fix server time
 function getIsraelTime() {
-    var d = new Date();
-    return new Date(new Date(d).setHours(d.getUTCHours() + ADD_HOUR_TO_UTC));
+    let date = new Date();
+    var invdate = new Date(date.toLocaleString('en-US', {
+        timeZone: "Asia/Jerusalem"
+    }));
+    var diff = date.getTime() - invdate.getTime();
+    return new Date(date.getTime() - diff);
 }
 
 function read_AdminsFile() {
